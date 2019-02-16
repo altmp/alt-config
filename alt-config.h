@@ -359,7 +359,7 @@ namespace alt::config
 		{
 			while (Unread() > 0)
 			{
-				if (Peek() == ' ' || Peek() == '\n' || Peek() == ',')
+				if (Peek() == ' ' || Peek() == '\n' || Peek() == '\r' || Peek() == '\t' || Peek() == ',')
 					Skip();
 				else if (Peek() == '#')
 				{

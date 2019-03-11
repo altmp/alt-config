@@ -58,10 +58,12 @@ namespace alt::config
 	class Error : public std::exception
 	{
 		std::string err;
+		size_t pos;
 
 	public:
-		Error(const std::string& _err) : err{ _err } { }
+		Error(const std::string& _err, size_t _pos = 0) : err{ _err }, pos{ _pos } { }
 		const char* what() const noexcept override { return err.c_str(); }
+		const size_t position() const { return pos; }
 	};
 
 	class Node
@@ -348,6 +350,7 @@ namespace alt::config
 			} type;
 
 			std::string value;
+			size_t pos;
 		};
 
 		std::size_t Unread() { return buffer.size() - readPos; }
@@ -377,7 +380,7 @@ namespace alt::config
 
 		void Tokenize()
 		{
-			tokens.push_back({ Token::DICT_START, "" });
+			tokens.push_back({ Token::DICT_START, "", 0 });
 
 			while (Unread() > 0)
 			{
@@ -389,22 +392,22 @@ namespace alt::config
 				if (Peek() == '[')
 				{
 					Skip();
-					tokens.push_back({ Token::ARRAY_START, "" });
+					tokens.push_back({ Token::ARRAY_START, "", this->readPos });
 				}
 				else if (Peek() == ']')
 				{
 					Skip();
-					tokens.push_back({ Token::ARRAY_END, "" });
+					tokens.push_back({ Token::ARRAY_END, "", this->readPos });
 				}
 				else if (Peek() == '{')
 				{
 					Skip();
-					tokens.push_back({ Token::DICT_START, "" });
+					tokens.push_back({ Token::DICT_START, "", this->readPos });
 				}
 				else if (Peek() == '}')
 				{
 					Skip();
-					tokens.push_back({ Token::DICT_END, "" });
+					tokens.push_back({ Token::DICT_END, "", this->readPos });
 				}
 				else
 				{
@@ -429,7 +432,7 @@ namespace alt::config
 						}
 
 						if (Unread() == 0)
-							throw Error("Unexpected end of file");
+							throw Error("Unexpected end of file", buffer.size());
 
 						Skip();
 					}
@@ -450,16 +453,16 @@ namespace alt::config
 					val = detail::Unescape(val);
 
 					if (Unread() > 0 && Peek() == ':')
-						tokens.push_back({ Token::KEY, val });
+						tokens.push_back({ Token::KEY, val, this->readPos });
 					else
-						tokens.push_back({ Token::SCALAR, val });
+						tokens.push_back({ Token::SCALAR, val, this->readPos });
 
 					if (Unread() > 0 && (Peek() == ':' || Peek() == ','))
 						Skip();
 				}
 			}
 
-			tokens.push_back({ Token::DICT_END, "" });
+			tokens.push_back({ Token::DICT_END, "", this->readPos });
 		}
 
 		Node Parse(std::deque<Token>::iterator& tok)
@@ -487,7 +490,7 @@ namespace alt::config
 				while (tok != tokens.end() && tok->type != Token::DICT_END)
 				{
 					if (tok->type != Token::KEY)
-						throw Error("key expected");
+						throw Error("key expected", tok->pos);
 
 					std::string key = tok->value;
 
@@ -499,7 +502,7 @@ namespace alt::config
 			}
 			}
 
-			throw Error("invalid token");
+			throw Error("invalid token", tok->pos);
 		}
 
 		std::vector<char> buffer;

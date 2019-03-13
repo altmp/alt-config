@@ -59,11 +59,15 @@ namespace alt::config
 	{
 		std::string err;
 		size_t pos;
+		size_t lin;
+		size_t col;
 
 	public:
-		Error(const std::string& _err, size_t _pos = 0) : err{ _err }, pos{ _pos } { }
+		Error(const std::string& _err, size_t _pos = 0, size_t _line = 0, size_t _column = 0) : err{ _err }, pos{ _pos }, lin{ _line }, col{ _column } { }
 		const char* what() const noexcept override { return err.c_str(); }
 		const size_t position() const { return pos; }
+		const size_t line() const { return lin; }
+		const size_t column() const { return col; }
 	};
 
 	class Node
@@ -351,12 +355,35 @@ namespace alt::config
 
 			std::string value;
 			size_t pos;
+			size_t line;
+			size_t col;
 		};
 
 		std::size_t Unread() { return buffer.size() - readPos; }
 		char Peek(std::size_t offset = 0) { return *(buffer.data() + readPos + offset); }
-		char Get() { return *(buffer.data() + readPos++); }
-		void Skip(std::size_t n = 1) { readPos += n; }
+		char Get()
+		{
+			column++;
+			if (Peek() == '\n')
+			{
+				line++;
+				column = 0;
+			}
+			return *(buffer.data() + readPos++);
+		}
+		void Skip(std::size_t n = 1)
+		{
+			for (int i = 0; i < n; i++)
+			{
+				column++;
+				if (Peek(i) == '\n')
+				{
+					line++;
+					column = 0;
+				}
+			}
+			readPos += n;
+		}
 
 		void SkipToNextToken()
 		{
@@ -392,22 +419,22 @@ namespace alt::config
 				if (Peek() == '[')
 				{
 					Skip();
-					tokens.push_back({ Token::ARRAY_START, "", this->readPos });
+					tokens.push_back({ Token::ARRAY_START, "", this->readPos, this->line, this->column });
 				}
 				else if (Peek() == ']')
 				{
 					Skip();
-					tokens.push_back({ Token::ARRAY_END, "", this->readPos });
+					tokens.push_back({ Token::ARRAY_END, "", this->readPos, this->line, this->column });
 				}
 				else if (Peek() == '{')
 				{
 					Skip();
-					tokens.push_back({ Token::DICT_START, "", this->readPos });
+					tokens.push_back({ Token::DICT_START, "", this->readPos, this->line, this->column });
 				}
 				else if (Peek() == '}')
 				{
 					Skip();
-					tokens.push_back({ Token::DICT_END, "", this->readPos });
+					tokens.push_back({ Token::DICT_END, "", this->readPos, this->line, this->column });
 				}
 				else
 				{
@@ -432,7 +459,7 @@ namespace alt::config
 						}
 
 						if (Unread() == 0)
-							throw Error("Unexpected end of file", buffer.size());
+							throw Error("Unexpected end of file", this->readPos, this->line, this->column);
 
 						Skip();
 					}
@@ -453,16 +480,16 @@ namespace alt::config
 					val = detail::Unescape(val);
 
 					if (Unread() > 0 && Peek() == ':')
-						tokens.push_back({ Token::KEY, val, this->readPos });
+						tokens.push_back({ Token::KEY, val, this->readPos, this->line, this->column });
 					else
-						tokens.push_back({ Token::SCALAR, val, this->readPos });
+						tokens.push_back({ Token::SCALAR, val, this->readPos, this->line, this->column });
 
 					if (Unread() > 0 && (Peek() == ':' || Peek() == ','))
 						Skip();
 				}
 			}
 
-			tokens.push_back({ Token::DICT_END, "", this->readPos });
+			tokens.push_back({ Token::DICT_END, "", this->readPos, this->line, this->column });
 		}
 
 		Node Parse(std::deque<Token>::iterator& tok)
@@ -490,7 +517,7 @@ namespace alt::config
 				while (tok != tokens.end() && tok->type != Token::DICT_END)
 				{
 					if (tok->type != Token::KEY)
-						throw Error("key expected", tok->pos);
+						throw Error("key expected", tok->pos, tok->line, tok->col);
 
 					std::string key = tok->value;
 
@@ -502,11 +529,13 @@ namespace alt::config
 			}
 			}
 
-			throw Error("invalid token", tok->pos);
+			throw Error("invalid token", tok->pos, tok->line, tok->col);
 		}
 
 		std::vector<char> buffer;
 		std::size_t readPos = 0;
+		std::size_t line = 1;
+		std::size_t column = 0;
 		std::deque<Token> tokens;
 	};
 

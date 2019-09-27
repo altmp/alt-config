@@ -130,6 +130,14 @@ namespace alt::config
 
 		}
 
+		template<class T>
+		Node(const std::vector<T>& _val) :
+			Node(List{ })
+		{
+			for (auto& v : _val)
+				ToList().push_back(v);
+		}
+
 		Node(const Dict& _val) :
 			type(Type::DICT),
 			val(new ValueDict{ _val })

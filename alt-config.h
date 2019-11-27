@@ -18,7 +18,6 @@ namespace alt::config
 			std::string res;
 
 			auto it = str.begin();
-
 			while (it != str.end())
 			{
 				char c = *it++;
@@ -36,6 +35,11 @@ namespace alt::config
 					case 'r':
 						res += '\r';
 						break;
+					case '\'':
+					case '"':
+					case '\\':
+						res += c;
+						break;
 					default:
 						(res += '\\') += c;
 					}
@@ -50,6 +54,37 @@ namespace alt::config
 			res.erase(std::find_if(res.rbegin(), res.rend(), [](int ch) {
 				return !std::isspace(ch);
 			}).base(), res.end());
+
+			return res;
+		}
+
+		inline std::string Escape(const std::string& str)
+		{
+			std::string res;
+			
+			auto it = str.begin();
+			while (it != str.end())
+			{
+				char c = *it++;
+
+				switch (c)
+				{
+				case '\n':
+					res += "\\n";
+					break;
+				case '\r':
+					res += '\\r';
+					break;
+				case '\'':
+				case '\"':
+				case '\\':
+					res += '\\';
+					res += c;
+					break;
+				default:
+					res += c;
+				}
+			}
 
 			return res;
 		}
@@ -452,7 +487,7 @@ namespace alt::config
 					{
 						char start = Get();
 
-						while (Unread() > 0 && Peek() != start)
+						while (Unread() > 1 && (Peek() == '\\' || Peek(1) != start))
 						{
 							if (Peek() == '\n' || Peek() == '\r')
 							{
@@ -465,6 +500,9 @@ namespace alt::config
 
 							val += Get();
 						}
+
+						if (Unread() > 0)
+							val += Get();
 
 						if (Unread() == 0)
 							throw Error("Unexpected end of file", this->readPos, this->line, this->column);
@@ -556,7 +594,7 @@ namespace alt::config
 
 			if (node.IsScalar())
 			{
-				os << '\'' << node.ToString() << "'\n";
+				os << '\'' << detail::Escape(node.ToString()) << "'\n";
 			}
 			else if (node.IsList())
 			{

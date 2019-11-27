@@ -487,25 +487,28 @@ namespace alt::config
 					{
 						char start = Get();
 
-						while (Unread() > 1 && (Peek() == '\\' || Peek(1) != start))
+						if (Peek() != start)
 						{
-							if (Peek() == '\n' || Peek() == '\r')
+							while (Unread() > 1 && (Peek() == '\\' || Peek(1) != start))
 							{
-								if (Get() == '\r' && Peek() == '\n')
-									Skip();
+								if (Peek() == '\n' || Peek() == '\r')
+								{
+									if (Get() == '\r' && Peek() == '\n')
+										Skip();
 
-								val += '\n';
-								continue;
+									val += '\n';
+									continue;
+								}
+
+								val += Get();
 							}
 
-							val += Get();
+							if (Unread() > 0)
+								val += Get();
+
+							if (Unread() == 0)
+								throw Error("Unexpected end of file", this->readPos, this->line, this->column);
 						}
-
-						if (Unread() > 0)
-							val += Get();
-
-						if (Unread() == 0)
-							throw Error("Unexpected end of file", this->readPos, this->line, this->column);
 
 						Skip();
 					}

@@ -73,7 +73,7 @@ namespace alt::config
 					res += "\\n";
 					break;
 				case '\r':
-					res += '\\r';
+					res += "\\r";
 					break;
 				case '\'':
 				case '\"':

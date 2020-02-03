@@ -52,7 +52,7 @@ namespace alt::config
 
 			// trim trailing spaces
 			res.erase(std::find_if(res.rbegin(), res.rend(), [](int ch) {
-				return !std::isspace(ch);
+				return ch < 0 || !std::isspace(ch);
 			}).base(), res.end());
 
 			return res;

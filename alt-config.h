@@ -591,7 +591,7 @@ namespace alt::config
 	class Emitter
 	{
 	public:
-		void Emit(Node& node, std::ostream& os, int indent = 0)
+		void Emit(Node& node, std::ostream& os, int indent = 0, bool isLast = true)
 		{
 			std::string _indent(indent * 2, ' ');
 
@@ -603,30 +603,32 @@ namespace alt::config
 			{
 				os << "[\n";
 
-				for (auto& _node : node.ToList())
+				auto& list = node.ToList();
+				for (auto it = list.begin(); it != list.end(); ++it)
 				{
 					os << _indent;
-					Emit(_node, os, indent + 1);
+					Emit(*it, os, indent + 1, std::next(it) == list.end());
 				}
 
-				os << _indent << "]\n";
+				os << std::string((indent - 1) * 2, ' ') << (isLast ? "]\n" : "],\n");
 			}
 			else if (node.IsDict())
 			{
 				if (indent > 0)
 					os << "{\n";
 
-				for (auto& pair : node.ToDict())
+				auto& dict = node.ToDict();
+				for (auto it = dict.begin(); it != dict.end(); ++it)
 				{
-					if (pair.second.IsNone())
+					if (it->second.IsNone())
 						continue;
 
-					os << _indent << pair.first << ": ";
-					Emit(pair.second, os, indent + 1);
+					os << _indent << it->first << ": ";
+					Emit(it->second, os, std::next(it) == dict.end());
 				}
 
 				if (indent > 0)
-					os << _indent << "}\n";
+					os << std::string((indent-1) * 2, ' ') << (isLast ? "}\n" : "},\n");
 			}
 		}
 	};

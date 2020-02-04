@@ -624,7 +624,7 @@ namespace alt::config
 						continue;
 
 					os << _indent << it->first << ": ";
-					Emit(it->second, os, std::next(it) == dict.end());
+					Emit(it->second, os, indent + 1, std::next(it) == dict.end());
 				}
 
 				if (indent > 0)

@@ -268,9 +268,9 @@ namespace alt::config
 
 			bool ToBool() override
 			{
-				if (val == "true" || val == "yes")
+				if (val == "true" || val == "yes" || val == "YesChungus")
 					return true;
-				else if (val == "false" || val == "no")
+				else if (val == "false" || val == "no" || val == "NoChungus")
 					return false;
 
 				throw Error{ "Not a bool" };

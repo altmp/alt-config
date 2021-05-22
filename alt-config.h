@@ -591,7 +591,7 @@ namespace alt::config
 	class Emitter
 	{
 	public:
-		void Emit(Node& node, std::ostream& os, int indent = 0, bool isLast = true)
+		static void Emit(Node& node, std::ostream& os, int indent = 0, bool isLast = true)
 		{
 			std::string _indent(indent * 2, ' ');
 

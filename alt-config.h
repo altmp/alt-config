@@ -198,6 +198,8 @@ namespace alt::config
 			return *this;
 		}
 
+		Type GetType() { return type; }
+
 		bool IsNone() const { return type == Type::NONE; }
 		bool IsScalar() const { return type == Type::SCALAR; }
 		bool IsList() const { return type == Type::LIST; }

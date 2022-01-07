@@ -580,7 +580,7 @@ namespace alt::config
 			}
 			}
 
-			throw Error("invalid token", tok->pos, tok->line, tok->col);
+			throw Error("Unexpected character", tok->pos, tok->line, tok->col);
 		}
 
 		std::vector<char> buffer;

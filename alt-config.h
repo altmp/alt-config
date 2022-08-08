@@ -441,8 +441,16 @@ namespace alt::config
 				{
 					Skip();
 
-					while (Unread() > 0 && Peek() != '\n' && Peek() != '#')
-						Skip();
+					while (Unread() > 0 && Peek() != '\n' && Peek() != '#' && Peek() != '"')
+					{
+						if (Peek() != '"')
+							Skip();
+						else
+						{
+							while (Unread() > 0 && Peek() != '\n' && Peek() != '"')
+								Skip();
+						}
+					}
 
 					if (Unread() > 0) Skip();
 				}

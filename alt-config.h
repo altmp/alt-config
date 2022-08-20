@@ -282,7 +282,10 @@ namespace alt::config
 			{
 				try
 				{
-					return std::stod(val);
+					size_t idx;
+					double result = std::stod(val, &idx);
+					if (idx < val.size()) throw std::invalid_argument{ "" };
+					return result;
 				}
 				catch (const std::invalid_argument&)
 				{

@@ -696,7 +696,7 @@ namespace alt::config
 				auto& dict = node.ToDict();
 				for (auto it = dict.begin(); it != dict.end(); ++it)
 				{
-					if (it->second->IsNone())
+					if (!it->second || it->second->IsNone())
 						continue;
 
 					os << _indent << it->first << ": ";

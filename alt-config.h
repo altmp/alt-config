@@ -110,7 +110,7 @@ namespace alt::config
 	public:
 		using Scalar = std::string;
 		using List = std::vector<Node>;
-		using Dict = std::map<std::string, Node>;
+		using Dict = std::map<std::string, Node*>;
 
 		enum class Type
 		{
@@ -123,6 +123,13 @@ namespace alt::config
 		Node() :
 			type(Type::NONE),
 			val(new Value)
+		{
+
+		}
+		
+		Node(Node& _node) :
+			type(_node.type),
+			val(_node.val->Copy())
 		{
 
 		}
@@ -349,7 +356,13 @@ namespace alt::config
 
 			Node& Get(const std::string& key) override
 			{
-				return val[key];
+				static Node invalid = Node();
+				auto result = val[key];
+				if (!result)
+				{
+					return invalid;
+				}
+				return *result;
 			}
 
 		private:
@@ -535,7 +548,7 @@ namespace alt::config
 							Peek() != '#')
 						{
 							val += Get();
-						} 
+						}
 					}
 
 					val = detail::Unescape(val);
@@ -582,7 +595,7 @@ namespace alt::config
 
 					std::string key = tok->value;
 
-					dict.insert({ key, Parse(++tok) });
+					dict.insert({ key, new Node(Parse(++tok)) });
 				}
 
 				++tok;
@@ -642,11 +655,11 @@ namespace alt::config
 				auto& dict = node.ToDict();
 				for (auto it = dict.begin(); it != dict.end(); ++it)
 				{
-					if (it->second.IsNone())
+					if (it->second->IsNone())
 						continue;
 
 					os << _indent << it->first << ": ";
-					Emit(it->second, os, indent + 1, std::next(it) == dict.end());
+					Emit(*it->second, os, indent + 1, std::next(it) == dict.end());
 				}
 
 				if (indent > 0)

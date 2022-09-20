@@ -109,7 +109,7 @@ namespace alt::config
 	{
 	public:
 		using Scalar = std::string;
-		using List = std::vector<Node>;
+		using List = std::vector<Node*>;
 		using Dict = std::map<std::string, Node*>;
 
 		enum class Type
@@ -177,7 +177,7 @@ namespace alt::config
 			Node(List{ })
 		{
 			for (auto& v : _val)
-				ToList().push_back(v);
+				ToList().push_back(new Node(v));
 		}
 
 		Node(const Dict& _val) :
@@ -320,8 +320,26 @@ namespace alt::config
 		{
 		public:
 			ValueList(const List& _val) : val(_val) { }
+			
+			ValueList() { }
+			
+			~ValueList() override
+			{
+				for (auto& curr : val)
+				{
+					delete curr;
+				}
+			}
 
-			Value* Copy() { return new ValueList{ val }; }
+			Value* Copy()
+			{
+				auto newVal = new ValueList{};
+				for (auto& curr : val)
+				{
+					newVal->val.push_back(new Node(*curr));
+				}
+				return newVal;
+			}
 
 			List& ToList() override
 			{
@@ -335,7 +353,12 @@ namespace alt::config
 				if (idx >= val.size())
 					return none;
 
-				return val.at(idx);
+				auto result = val.at(idx);
+				if (!result)
+				{
+					return none;
+				}
+				return *result;
 			}
 
 		private:
@@ -374,11 +397,11 @@ namespace alt::config
 
 			Node& Get(const std::string& key) override
 			{
-				static Node invalid = Node();
+				static Node none;
 				auto result = val[key];
 				if (!result)
 				{
-					return invalid;
+					return none;
 				}
 				return *result;
 			}
@@ -596,7 +619,7 @@ namespace alt::config
 
 				++tok;
 				while (tok != tokens.end() && tok->type != Token::ARRAY_END)
-					list.push_back(Parse(tok));
+					list.push_back(new Node(Parse(tok)));
 
 				++tok;
 				return { list };
@@ -660,7 +683,7 @@ namespace alt::config
 				for (auto it = list.begin(); it != list.end(); ++it)
 				{
 					os << _indent;
-					Emit(*it, os, indent + 1, std::next(it) == list.end());
+					Emit(**it, os, indent + 1, std::next(it) == list.end());
 				}
 
 				os << std::string((indent - 1) * 2, ' ') << (isLast ? "]\n" : "],\n");

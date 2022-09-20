@@ -346,8 +346,26 @@ namespace alt::config
 		{
 		public:
 			ValueDict(const Dict& _val) : val(_val) { }
+			
+			ValueDict() { }
+			
+			~ValueDict() override
+			{
+				for (auto& curr : val)
+				{
+					delete curr.second;
+				}
+			}
 
-			Value* Copy() { return new ValueDict{ val }; }
+			Value* Copy()
+			{
+				auto newVal = new ValueDict{};
+				for (auto& curr : val)
+				{
+					newVal->val[curr.first] = new Node(*curr.second);
+				}
+				return newVal;
+			}
 
 			Dict& ToDict() override
 			{

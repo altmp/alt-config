@@ -327,6 +327,7 @@ namespace alt::config
 			{
 				for (auto& curr : val)
 				{
+					if (!curr || curr->IsNone()) continue;
 					delete curr;
 				}
 			}
@@ -336,6 +337,7 @@ namespace alt::config
 				auto newVal = new ValueList{};
 				for (auto& curr : val)
 				{
+					if (!curr || curr->IsNone()) continue;
 					newVal->val.push_back(new Node(*curr));
 				}
 				return newVal;
@@ -376,6 +378,7 @@ namespace alt::config
 			{
 				for (auto& curr : val)
 				{
+					if (!curr.second || curr.second->IsNone()) continue;
 					delete curr.second;
 				}
 			}
@@ -385,6 +388,7 @@ namespace alt::config
 				auto newVal = new ValueDict{};
 				for (auto& curr : val)
 				{
+					if (!curr.second || curr.second->IsNone()) continue;
 					newVal->val[curr.first] = new Node(*curr.second);
 				}
 				return newVal;

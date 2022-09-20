@@ -402,12 +402,13 @@ namespace alt::config
 			Node& Get(const std::string& key) override
 			{
 				static Node none;
-				auto result = val[key];
-				if (!result)
+				auto result = val.find(key);
+				if (result == val.end())
 				{
+					std::cout << "not found" << std::endl;
 					return none;
 				}
-				return *result;
+				return *result->second;
 			}
 
 		private:

@@ -205,24 +205,90 @@ namespace alt::config
 			return *this;
 		}
 
-		Type GetType() { return type; }
+		Type GetType()
+		{
+			if (!this) return Type::NONE;
+			return type;
+		}
 
-		bool IsNone() const { return type == Type::NONE; }
-		bool IsScalar() const { return type == Type::SCALAR; }
-		bool IsList() const { return type == Type::LIST; }
-		bool IsDict() const { return type == Type::DICT; }
+		bool IsNone() const
+		{
+			if (!this) return true;
+			return type == Type::NONE;
+		}
+		bool IsScalar() const
+		{
+			if (!this) return false;
+			return type == Type::SCALAR;
+		}
+		bool IsList() const
+		{
+			if (!this) return false;
+			return type == Type::LIST;
+		}
+		bool IsDict() const
+		{
+			if (!this) return false;
+			return type == Type::DICT;
+		}
 
-		bool ToBool() { return val->ToBool(); }
-		bool ToBool(bool def) { return val->ToBool(def); }
+		bool ToBool() {
+			if (!val)
+			{
+				throw Error{ "Invalid cast" };
+			}
+			return val->ToBool();
+		}
+		bool ToBool(bool def)
+		{
+			if (!this) return def;
+			return val->ToBool(def);
+		}
 
-		double ToNumber() { return val->ToNumber(); }
-		double ToNumber(double def) { return val->ToNumber(def); }
+		double ToNumber()
+		{
+			if (!val)
+			{
+				throw Error{ "Invalid cast" };
+			}
+			return val->ToNumber();
+		}
+		double ToNumber(double def)
+		{
+			if (!this) return def;
+			return val->ToNumber(def);
+		}
 
-		std::string ToString() { return val->ToString(); }
-		std::string ToString(const std::string& def) { return val->ToString(def); }
+		std::string ToString()
+		{
+			if (!val)
+			{
+				throw Error{ "Invalid cast" };
+			}
+			return val->ToString();
+		}
+		std::string ToString(const std::string& def)
+		{
+			if (!this) return def;
+			return val->ToString(def);
+		}
 
-		List& ToList() { return val->ToList(); }
-		Dict& ToDict() { return val->ToDict(); }
+		List& ToList()
+		{
+			if (!val)
+			{
+				throw Error{ "Invalid cast" };
+			}
+			return val->ToList();
+		}
+		Dict& ToDict()
+		{
+			if (!val)
+			{
+				throw Error{ "Invalid cast" };
+			};
+			return val->ToDict();
+		}
 
 		Node& operator[](std::size_t idx) { return val->Get(idx); }
 		Node& operator[](const std::string& key) { return val->Get(key); }
